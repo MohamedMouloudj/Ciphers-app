@@ -134,6 +134,27 @@ class CipherApp(QtWidgets.QWidget):
                 return result_str.decode('utf-8')
         elif cipher_type == "vigenere":
             pass
+             //added by brahim 
+        elif cipher_type == "substitution":
+        self.ffi.cdef("""
+            char* chiffrementSubstitution(char *message, char *key);
+            char* dechiffrementSubstitution(char *message, char *key);
+        """)
+        
+        if encrypt:
+            result = self.cipher_lib.chiffrementSubstitution(text_bytes, prv_key.encode('utf-8')) 
+            if result == self.ffi.NULL:
+                raise Exception("Error in encryption")
+            result_str = self.ffi.string(result)
+            return result_str.decode('utf-8')
+        else:
+            result = self.cipher_lib.dechiffrementSubstitution(text_bytes, prv_key.encode('utf-8')) 
+            if result == self.ffi.NULL:
+                raise Exception("Error in decryption")
+            result_str = self.ffi.string(result)
+            return result_str.decode('utf-8')
+              
+            //fin d'ajout by brahim
 
         # Return placeholder for now
         direction = "encrypted" if encrypt else "decrypted"
