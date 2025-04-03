@@ -64,42 +64,42 @@ void dechiffrer(const char *texte, char *resultat, char table_originale[], char 
     resultat[strlen(texte)] = '\0';
 }
 
-int main() {
-    srand(time(NULL));
-    char table_originale[ALPHABET_SIZE + 1];
-    char table_substituee[ALPHABET_SIZE + 1];
-    char texte[256], resultat[256];
-    int choix, mode;
+// int main() {
+//     srand(time(NULL));
+//     char table_originale[ALPHABET_SIZE + 1];
+//     char table_substituee[ALPHABET_SIZE + 1];
+//     char texte[256], resultat[256];
+//     int choix, mode;
     
-    printf("Choisissez la méthode de remplissage de la table :\n");
-    printf("1. Automatique\n2. Manuelle\n");
-    scanf("%d", &choix);
-    getchar(); // Pour éviter le bug de scanf
+//     printf("Choisissez la méthode de remplissage de la table :\n");
+//     printf("1. Automatique\n2. Manuelle\n");
+//     scanf("%d", &choix);
+//     getchar(); // Pour éviter le bug de scanf
     
-    if (choix == 1) {
-        genererTableAleatoire(table_originale, table_substituee);
-    } else {
-        saisirTable(table_originale, table_substituee);
-    }
+//     if (choix == 1) {
+//         genererTableAleatoire(table_originale, table_substituee);
+//     } else {
+//         saisirTable(table_originale, table_substituee);
+//     }
     
-    printf("Table d'origine      : %s\n", table_originale);
-    printf("Table de substitution: %s\n", table_substituee);
+//     printf("Table d'origine      : %s\n", table_originale);
+//     printf("Table de substitution: %s\n", table_substituee);
     
-    printf("Choisissez le mode :\n1. Chiffrement\n2. Déchiffrement\n");
-    scanf("%d", &mode);
-    getchar();
+//     printf("Choisissez le mode :\n1. Chiffrement\n2. Déchiffrement\n");
+//     scanf("%d", &mode);
+//     getchar();
     
-    printf("Entrez le texte (majuscule uniquement) : ");
-    fgets(texte, sizeof(texte), stdin);
-    texte[strcspn(texte, "\n")] = 0; // Supprimer le \n final
+//     printf("Entrez le texte (majuscule uniquement) : ");
+//     fgets(texte, sizeof(texte), stdin);
+//     texte[strcspn(texte, "\n")] = 0; // Supprimer le \n final
 
-    if (mode == 1) {
-        chiffrer(texte, resultat, table_originale, table_substituee);
-    } else {
-        dechiffrer(texte, resultat, table_originale, table_substituee);
-    }
+//     if (mode == 1) {
+//         chiffrer(texte, resultat, table_originale, table_substituee);
+//     } else {
+//         dechiffrer(texte, resultat, table_originale, table_substituee);
+//     }
     
-    printf("Résultat : %s\n", resultat);
-    return 0;
-}
+//     printf("Résultat : %s\n", resultat);
+//     return 0;
+// }
 

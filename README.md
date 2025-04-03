@@ -14,7 +14,7 @@ A comprehensive application that provides a graphical user interface built with 
 - User-friendly PyQt5 interface for entering plaintext and ciphertext
 - Dynamic key input fields that adapt based on the selected cipher
 - High-performance cipher implementations in C
-- Python-to-C integration using ctypes
+- Python-to-C integration using cffi for seamless function calls
 
 ## Project Structure
 
@@ -22,8 +22,8 @@ A comprehensive application that provides a graphical user interface built with 
 cipher-app/
 ├── cipher_app.py    # Main PyQt5 application
 ├── ciphers-list.ui  # UI design file created with Qt Designer
-├── ciphers.c        # C implementation of cipher algorithms
-├── ciphers.h        # Header file for cipher algorithms
+├── classical-ciphers # Directory for classical cipher implementations
+│   └── [ciphers].c   # C source files for each cipher algorithm
 ├── requirements.txt # Python dependencies
 └── README.md        # Project documentation
 ```
@@ -43,14 +43,19 @@ cipher-app/
    pip install -r requirements.txt
    ```
 
-3. Compile the C cipher library:
+3. Optional - Compile your C cipher library into a shared object file (`.so` or `.dll` depending on your OS):
+   For Linux/MacOS:
    ```
-   gcc -shared -o ciphers.so -fPIC ciphers.c
+   gcc -shared -o cipher.so -fPIC ciphers.c
+   ```
+   For Windows:
+   ```
+   gcc -shared -o cipher.dll -fPIC ciphers.c
    ```
 
 ## Usage
 
-1. Run the application:
+1. Run the application (make sure you are in the project directory):
 
    ```
    python cipher_app.py
@@ -73,21 +78,24 @@ The cipher algorithms are implemented in C for optimal performance. The C functi
 
 ```c
 // For encryption
-int cipher_encrypt(const char* input, char* key, char* output, int output_size);
+char* cipher_encrypt(const char* input, char* key);
 
 // For decryption
-int cipher_decrypt(const char* input, char* key, char* output, int output_size);
+char* cipher_decrypt(const char* input, char* key);
 ```
 
 ### Python-C Integration
 
-The Python application uses ctypes to load and call the C functions:
+The Python application uses cffi to load and call the C functions:
 
 ```python
-self.cipher_lib = ctypes.CDLL("./ciphers.so")
-result_buffer = ctypes.create_string_buffer(1024)
-self.cipher_lib.cipher_function(input.encode('utf-8'), key.encode('utf-8'),
-                              result_buffer, ctypes.c_int(len(result_buffer)))
+import cffi
+ffi = cffi.FFI()
+ffi.cdef("""
+    char* cipher_encrypt(const char* input, char* key);
+    char*int cipher_decrypt(const char* input, char* key);
+""")
+lib = ffi.dlopen("cipher.so")  # Load the shared library
 ```
 
 ## Extending the Application
@@ -102,4 +110,5 @@ self.cipher_lib.cipher_function(input.encode('utf-8'), key.encode('utf-8'),
 
 - Python 3.6 or higher
 - PyQt5
+- cffi
 - C compiler (gcc, clang, etc.)

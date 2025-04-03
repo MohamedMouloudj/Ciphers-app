@@ -1,16 +1,34 @@
 import sys
-import os
+import platform
 from PyQt5 import QtWidgets, uic
-import ctypes
+import cffi
+import os
+
+# This is the list of libraries we will use for the ciphers
+libraries={
+    "cesar": "classical-cihers/cesar",
+    "vigenere":"classical-cihers/vigenere",
+    "substitution": "classical-cihers/substitution",
+    "Analyse_frequentielle":"classical-cihers/Analyse_frequentielle",
+    "Coincidence_index":"classical-cihers/indice_coincidence",
+}
+
+def get_shared_library(lib_name):
+    """Get the absolute path of the shared library based on the OS"""
+    system_name = platform.system()
+    if system_name not in ["Windows", "Linux"]:
+        raise Exception("Unsupported OS")
+    ext = {"Windows": ".dll", "Linux": ".so"}[system_name]
+    return os.path.abspath(f"./{lib_name}{ext}")
 
 class CipherApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         
         uic.loadUi('ciphers-list.ui', self)
+        self.ffi = cffi.FFI()
         
         self.setWindowTitle("Ciphers Application")
-        
         self.cipherCombo = self.findChild(QtWidgets.QComboBox, 'cipherCombo')
         self.prvInput = self.findChild(QtWidgets.QLineEdit, 'prvInput')
         self.pubInput = self.findChild(QtWidgets.QLineEdit, 'pubInput')
@@ -19,7 +37,7 @@ class CipherApp(QtWidgets.QWidget):
         self.launch = self.findChild(QtWidgets.QPushButton, 'launch')
         
         # Cipher options, we will add more, this is a placeholder
-        self.cipherCombo.addItems(["Caesar", "Vigenere", "Substitution", "RSA", "AES"])
+        self.cipherCombo.addItems(libraries.keys())
         
         # connect signals (events) to slots (functions)
         self.cipherCombo.currentIndexChanged.connect(self.cipher_changed)
@@ -27,9 +45,8 @@ class CipherApp(QtWidgets.QWidget):
         
         # Load C library for cipher functions
         try:
-            # Adjust the path to where your C library is located
-            # self.cipher_lib = ctypes.CDLL("./ciphers.so")
-            self.cipher_lib = None  # Comment this and uncomment above line when you have the library
+            lib_name = libraries[self.cipherCombo.currentText()]
+            self.cipher_lib = self.ffi.dlopen(get_shared_library(lib_name))
         except Exception as e:
             print(f"Error loading C library: {e}")
             self.cipher_lib = None
@@ -42,15 +59,15 @@ class CipherApp(QtWidgets.QWidget):
         cipher = self.cipherCombo.currentText()
         
         # Adjust UI based on cipher selection
-        if cipher == "Caesar":
+        if cipher == "cesar":
             self.prvInput.setPlaceholderText("Enter a number (1-25)")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
-        elif cipher == "Vigenere":
+        elif cipher == "vigenere":
             self.prvInput.setPlaceholderText("Enter a keyword")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
-        elif cipher == "Substitution":
+        elif cipher == "substitution":
             self.prvInput.setPlaceholderText("Enter 26 letters (a-z)")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
@@ -74,6 +91,7 @@ class CipherApp(QtWidgets.QWidget):
         if encrypt_text and not decrypt_text:
             # Encryption mode
             result = self.call_c_cipher(encrypt_text, prv_key, pub_key, cipher, encrypt=True)
+            print(result)
             self.decryptInput.setPlainText(result)
         elif decrypt_text and not encrypt_text:
             # Decryption mode
@@ -88,35 +106,39 @@ class CipherApp(QtWidgets.QWidget):
             QtWidgets.QMessageBox.warning(self, "Input Error", "Please enter text to encrypt or decrypt")
     
     def call_c_cipher(self, text, prv_key, pub_key, cipher_type, encrypt=True):
-        """Interface with C cipher implementations"""
-        if self.cipher_lib is None:
-            # Placeholder implementation when C library is not available
-            direction = "encrypted" if encrypt else "decrypted"
-            return f"[{direction} with {cipher_type}]: {text}"
+        """Interface with C cipher implementations based on selected cipher type"""
         
-        # This is where we would call our C functions through ctypes
-        # ex:
-        '''
-        if cipher_type == "Caesar":
+        if self.cipher_lib is None:
+            QtWidgets.QMessageBox.critical(self, "Library Error", "C library not loaded")
+            return
+        
+        text_bytes = text.encode('utf-8')
+
+        if cipher_type == "cesar":
+            self.ffi.cdef("""
+                char* chiffrementCesar(char *message, int decalage);
+                char* dechiffrementCesar(char *message, int decalage);
+            """)
+
             if encrypt:
-                # Create buffer for result
-                result_buffer = ctypes.create_string_buffer(len(text) * 2)
-                # Call C function
-                self.cipher_lib.caesar_encrypt(
-                    text.encode('utf-8'),           # Input text
-                    ctypes.c_int(int(prv_key)),     # Key as integer
-                    result_buffer,                  # Buffer for result
-                    ctypes.c_int(len(result_buffer))# Buffer size
-                )
-                return result_buffer.value.decode('utf-8')
+                result=self.cipher_lib.chiffrementCesar(text_bytes, int(prv_key)) 
+                if result == self.ffi.NULL:
+                    raise Exception("Error in encryption")
+                result_str=self.ffi.string(result)
+                return result_str.decode('utf-8')
             else:
-                # Similar for decryption
-                # ...
-        '''
+                result=self.cipher_lib.dechiffrementCesar(text_bytes, int(prv_key)) 
+                if result == self.ffi.NULL:
+                    raise Exception("Error in decryption")
+                result_str=self.ffi.string(result)
+                return result_str.decode('utf-8')
+        elif cipher_type == "vigenere":
+            pass
+
         # Return placeholder for now
         direction = "encrypted" if encrypt else "decrypted"
         return f"[{direction} with {cipher_type}]: {text}"
-
+    
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = CipherApp()
