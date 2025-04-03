@@ -1,14 +1,22 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #define ALPHABET_SIZE 26
 #define MAX_TAILLE 1000
 
-void vigenere_chiffrer(const char *texte, const char *cle, char *texte_chiffre) {
+// chiffrement Vigeneere
+char* vigenere_chiffrer(const char *texte, const char *cle) {
     int len_texte = strlen(texte);
     int len_cle = strlen(cle);
     int j = 0;
+    char *texte_chiffre = (char*)malloc(len_texte + 1); // Allouer la mémoire
+
+    if (texte_chiffre == NULL) {
+        printf("Erreur d'allocation mémoire\n");
+        return NULL;
+    }
 
     for (int i = 0; i < len_texte; i++) {
         if (isalpha(texte[i])) {
@@ -21,12 +29,20 @@ void vigenere_chiffrer(const char *texte, const char *cle, char *texte_chiffre) 
         }
     }
     texte_chiffre[len_texte] = '\0';
+    return texte_chiffre; // Retourne le texte chiffré
 }
 
-void vigenere_dechiffrer(const char *texte_chiffre, const char *cle, char *texte_dechiffre) {
+// Déchiffrementt
+char* vigenere_dechiffrer(const char *texte_chiffre, const char *cle) {
     int len_texte = strlen(texte_chiffre);
     int len_cle = strlen(cle);
     int j = 0;
+    char *texte_dechiffre = (char*)malloc(len_texte + 1); // Allouer memory
+
+    if (texte_dechiffre == NULL) {
+        printf("Erreur d'allocation mémoire\n");
+        return NULL;
+    }
 
     for (int i = 0; i < len_texte; i++) {
         if (isalpha(texte_chiffre[i])) {
@@ -39,10 +55,19 @@ void vigenere_dechiffrer(const char *texte_chiffre, const char *cle, char *texte
         }
     }
     texte_dechiffre[len_texte] = '\0';
+    return texte_dechiffre; // Retourne le texte déchiffré
 }
 
-void trouver_cle(const char *texte, const char *texte_chiffre, char *cle) {
+
+char* trouver_cle(const char *texte, const char *texte_chiffre) {
     int len_texte = strlen(texte);
+    char *cle = (char*)malloc(len_texte + 1); // Allouer la mémoire
+
+    if (cle == NULL) {
+        printf("Erreur d'allocation mémoire\n");
+        return NULL;
+    }
+
     for (int i = 0; i < len_texte; i++) {
         if (isalpha(texte[i]) && isalpha(texte_chiffre[i])) {
             char base = isupper(texte[i]) ? 'A' : 'a';
@@ -52,55 +77,74 @@ void trouver_cle(const char *texte, const char *texte_chiffre, char *cle) {
         }
     }
     cle[len_texte] = '\0';
+    return cle; // Retourne la clé trouvée
 }
 
-// int main() {
-//     char texte[MAX_TAILLE], texte_chiffre[MAX_TAILLE], cle[MAX_TAILLE];
-//     int choix;
+// Fonction Protocole : interaction avec user
+void protocole() {
+    char texte[MAX_TAILLE], texte_chiffre[MAX_TAILLE], cle[MAX_TAILLE];
+    int choix;
 
-//     printf("Choisissez une option:\n1 - Chiffrement\n2 - Déchiffrement\n3 - Trouver la clé\n");
-//     scanf("%d", &choix);
-//     getchar(); // Consomme le retour à la ligne
+    printf("Choisissez une option :\n1 - Chiffrement\n2 - Déchiffrement\n3 - Trouver la clé\n");
+    scanf("%d", &choix);
+    getchar(); // Consomme le retour à la ligne
 
-//     if (choix == 1) {
-//         printf("Entrez le texte clair : ");
-//         fgets(texte, MAX_TAILLE, stdin);
-//         texte[strcspn(texte, "\n")] = 0;
-        
-//         printf("Entrez la clé : ");
-//         fgets(cle, MAX_TAILLE, stdin);
-//         cle[strcspn(cle, "\n")] = 0;
-        
-//         vigenere_chiffrer(texte, cle, texte_chiffre);
-//         printf("Texte chiffré : %s\n", texte_chiffre);
-//     } 
-//     else if (choix == 2) {
-//         printf("Entrez le texte chiffré : ");
-//         fgets(texte_chiffre, MAX_TAILLE, stdin);
-//         texte_chiffre[strcspn(texte_chiffre, "\n")] = 0;
-        
-//         printf("Entrez la clé : ");
-//         fgets(cle, MAX_TAILLE, stdin);
-//         cle[strcspn(cle, "\n")] = 0;
-        
-//         vigenere_dechiffrer(texte_chiffre, cle, texte);
-//         printf("Texte déchiffré : %s\n", texte);
-//     } 
-//     else if (choix == 3) {
-//         printf("Entrez le texte clair : ");
-//         fgets(texte, MAX_TAILLE, stdin);
-//         texte[strcspn(texte, "\n")] = 0;
+    switch (choix) {
+        case 1: {
+            printf("Entrez le texte clair : ");
+            fgets(texte, MAX_TAILLE, stdin);
+            texte[strcspn(texte, "\n")] = 0;  // Supprimer le \n à la fin
+            
+            printf("Entrez la clé : ");
+            fgets(cle, MAX_TAILLE, stdin);
+            cle[strcspn(cle, "\n")] = 0;  // Supprimer le \n à la fin
+            
+            char *texte_chiffre = vigenere_chiffrer(texte, cle);
+            if (texte_chiffre != NULL) {
+                printf("Texte chiffré : %s\n", texte_chiffre);
+                free(texte_chiffre);  // Libérer la mémoire allouée
+            }
+            break;
+        }
+        case 2: {
+            printf("Entrez le texte chiffré : ");
+            fgets(texte_chiffre, MAX_TAILLE, stdin);
+            texte_chiffre[strcspn(texte_chiffre, "\n")] = 0;  // Supprimer le \n à la fin
+            
+            printf("Entrez la clé : ");
+            fgets(cle, MAX_TAILLE, stdin);
+            cle[strcspn(cle, "\n")] = 0;  // Supprimer le \n à la fin
+            
+            char *texte = vigenere_dechiffrer(texte_chiffre, cle);
+            if (texte != NULL) {
+                printf("Texte déchiffré : %s\n", texte);
+                free(texte);  // Libérer la mémoire allouée
+            }
+            break;
+        }
+        case 3: {
+            printf("Entrez le texte clair : ");
+            fgets(texte, MAX_TAILLE, stdin);
+            texte[strcspn(texte, "\n")] = 0;  // Supprimer le \n à la fin
 
-//         printf("Entrez le texte chiffré : ");
-//         fgets(texte_chiffre, MAX_TAILLE, stdin);
-//         texte_chiffre[strcspn(texte_chiffre, "\n")] = 0;
+            printf("Entrez le texte chiffré : ");
+            fgets(texte_chiffre, MAX_TAILLE, stdin);
+            texte_chiffre[strcspn(texte_chiffre, "\n")] = 0;  // Supprimer le \n à la fin
 
-//         trouver_cle(texte, texte_chiffre, cle);
-//         printf("Clé trouvée : %s\n", cle);
-//     } 
-//     else {
-//         printf("Choix invalide.\n");
-//     }
+            char *cle = trouver_cle(texte, texte_chiffre);
+            if (cle != NULL) {
+                printf("Clé trouvée : %s\n", cle);
+                free(cle);  // Libérer la mémoire allouée
+            }
+            break;
+        }
+        default:
+            printf("Choix invalide.\n");
+            break;
+    }
+}
 
-//     return 0;
-// }
+int main() {
+    protocole(); 
+    return 0;
+}
