@@ -60,7 +60,7 @@ class CipherApp(QtWidgets.QWidget):
         
         # Adjust UI based on cipher selection
         if cipher == "cesar":
-            self.prvInput.setPlaceholderText("Enter a number (1-25)")
+            self.prvInput.setPlaceholderText("Enter a number (1-25)")  // self.prvInput.setPlaceholderText("Enter a keyword")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
         elif cipher == "vigenere":
@@ -132,9 +132,21 @@ class CipherApp(QtWidgets.QWidget):
                     raise Exception("Error in decryption")
                 result_str=self.ffi.string(result)
                 return result_str.decode('utf-8')
+        //elif cipher_type == "vigenere":
+          //  pass
+
+              //added by brahim 
         elif cipher_type == "vigenere":
-            pass
-             //added by brahim 
+        self.ffi.cdef("""
+            char* chiffrementVigenere(char *message, char *key);
+            char* dechiffrementVigenere(char *message, char *key);
+        """)
+
+        if encrypt:
+            result = self.cipher_lib.chiffrementVigenere(text_bytes, prv_key.encode('utf-8'))
+        else:
+            result = self.cipher_lib.dechiffrementVigenere(text_bytes, prv_key.encode('utf-8'))
+            
         elif cipher_type == "substitution":
         self.ffi.cdef("""
             char* chiffrementSubstitution(char *message, char *key);
