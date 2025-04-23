@@ -4,6 +4,9 @@
 
 #define ALPHABET_SIZE 26
 
+// Function prototypes
+double calculer_indice_coincidence(const char *texte);
+
 double calculer_indice_coincidence(const char *texte) {
     int frequences[ALPHABET_SIZE] = {0};
     int total_lettres = 0;
@@ -29,16 +32,16 @@ double calculer_indice_coincidence(const char *texte) {
     return ic;
 }
 
-// int main() {
-//     char texte[1000];
+int main() {
+    char texte[1000];
     
-//     printf("Entrez le texte à analyser:\n");
-//     fgets(texte, sizeof(texte), stdin);
+    printf("Entrez le texte à analyser:\n");
+    fgets(texte, sizeof(texte), stdin);
     
-//     double ic = calculer_indice_coincidence(texte);
+    double ic = calculer_indice_coincidence(texte);
     
-//     printf("Indice de coïncidence : %.6f\n", ic);
+    printf("Indice de coïncidence : %.6f\n", ic);
     
-//     return 0;
-// }
+    return 0;
+}
 

@@ -5,13 +5,14 @@ import cffi
 import os
 
 # This is the list of libraries we will use for the ciphers
-libraries={
-    "cesar": "classical-cihers/cesar",
-    "vigenere":"classical-cihers/vigenere",
-    "substitution": "classical-cihers/substitution",
-    "Analyse_frequentielle":"classical-cihers/Analyse_frequentielle",
-    "Coincidence_index":"classical-cihers/indice_coincidence",
-}
+libraries=[
+    "caesar",
+    "vigenere",
+    "substitution",
+    "Analyse_frequentielle",
+    "Coincidence_index", 
+    "playfair",
+]
 
 def get_shared_library(lib_name):
     """Get the absolute path of the shared library based on the OS"""
@@ -37,21 +38,23 @@ class CipherApp(QtWidgets.QWidget):
         self.launch = self.findChild(QtWidgets.QPushButton, 'launch')
         
         # Cipher options, we will add more, this is a placeholder
-        self.cipherCombo.addItems(libraries.keys())
+        self.cipherCombo.addItems(libraries)
         
         # connect signals (events) to slots (functions)
         self.cipherCombo.currentIndexChanged.connect(self.cipher_changed)
         self.launch.clicked.connect(self.process_cipher)
         
-        # Load C library for cipher functions
+        # Load main.c library for cipher functions
         try:
-            lib_name = libraries[self.cipherCombo.currentText()]
+            lib_name = "classical-ciphers/main"
+            self.ffi.cdef("""
+                const char* handle_cipher_file(const char* filename);
+            """)
             self.cipher_lib = self.ffi.dlopen(get_shared_library(lib_name))
         except Exception as e:
             print(f"Error loading C library: {e}")
             self.cipher_lib = None
-        
-        # initial cipher
+
         self.cipher_changed(0)
         
     def cipher_changed(self, index):
@@ -59,8 +62,16 @@ class CipherApp(QtWidgets.QWidget):
         cipher = self.cipherCombo.currentText()
         
         # Adjust UI based on cipher selection
-        if cipher == "cesar":
+        if cipher == "caesar":
             self.prvInput.setPlaceholderText("Enter a number (1-25)")
+            self.pubInput.setPlaceholderText("")
+            self.pubInput.setEnabled(False)
+        elif cipher == "Analyse_frequentielle":
+            self.prvInput.setPlaceholderText("Enter a text")
+            self.pubInput.setPlaceholderText("")
+            self.pubInput.setEnabled(False)
+        elif cipher == "Coincidence_index":
+            self.prvInput.setPlaceholderText("Enter a text")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
         elif cipher == "vigenere":
@@ -69,6 +80,10 @@ class CipherApp(QtWidgets.QWidget):
             self.pubInput.setEnabled(False)
         elif cipher == "substitution":
             self.prvInput.setPlaceholderText("Enter 26 letters (a-z)")
+            self.pubInput.setPlaceholderText("")
+            self.pubInput.setEnabled(False)
+        elif cipher == "playfair":
+            self.prvInput.setPlaceholderText("Enter a keyword")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
         elif cipher == "RSA":
@@ -87,11 +102,19 @@ class CipherApp(QtWidgets.QWidget):
         pub_key = self.pubInput.text()
         encrypt_text = self.encryptInput.toPlainText()
         decrypt_text = self.decryptInput.toPlainText()
+        if cipher == "playfair":
+            if encrypt_text:
+                encrypt_text = ''.join(filter(str.isalpha, encrypt_text)).upper()
+                self.encryptInput.setPlainText(encrypt_text)
+    
+            if decrypt_text:
+                decrypt_text = ''.join(filter(str.isalpha, decrypt_text)).upper()
+                self.decryptInput.setPlainText(decrypt_text)
+
         
         if encrypt_text and not decrypt_text:
             # Encryption mode
             result = self.call_c_cipher(encrypt_text, prv_key, pub_key, cipher, encrypt=True)
-            print(result)
             self.decryptInput.setPlainText(result)
         elif decrypt_text and not encrypt_text:
             # Decryption mode
@@ -105,39 +128,36 @@ class CipherApp(QtWidgets.QWidget):
             # No input text
             QtWidgets.QMessageBox.warning(self, "Input Error", "Please enter text to encrypt or decrypt")
     
-    def call_c_cipher(self, text, prv_key, pub_key, cipher_type, encrypt=True):
-        """Interface with C cipher implementations based on selected cipher type"""
+    def call_c_cipher(self, text, prv_key, pub_key, cipher, encrypt=True):
+        """Call the C library to handle the cipher operation"""	
         
         if self.cipher_lib is None:
             QtWidgets.QMessageBox.critical(self, "Library Error", "C library not loaded")
             return
-        
-        text_bytes = text.encode('utf-8')
+        if encrypt:
+            mode = "encrypt"
+        else:
+            mode = "decrypt"
+        with open("cipher_input.txt", "w") as f:
+            f.write(f"cipher: {cipher}\n")
+            f.write(f"mode: {mode}\n")
+            f.write(f"plain_text: {text}\n")
+            f.write(f"prv_key: {prv_key}\n")
+            f.write(f"pub_key: {pub_key}\n")
 
-        if cipher_type == "cesar":
-            self.ffi.cdef("""
-                char* chiffrementCesar(char *message, int decalage);
-                char* dechiffrementCesar(char *message, int decalage);
-            """)
+        result_ptr = self.cipher_lib.handle_cipher_file(b"cipher_input.txt")
+        if result_ptr == self.ffi.NULL:
+            print("C function returned NULL!")
+            return "Error: NULL pointer from C"
 
-            if encrypt:
-                result=self.cipher_lib.chiffrementCesar(text_bytes, int(prv_key)) 
-                if result == self.ffi.NULL:
-                    raise Exception("Error in encryption")
-                result_str=self.ffi.string(result)
-                return result_str.decode('utf-8')
-            else:
-                result=self.cipher_lib.dechiffrementCesar(text_bytes, int(prv_key)) 
-                if result == self.ffi.NULL:
-                    raise Exception("Error in decryption")
-                result_str=self.ffi.string(result)
-                return result_str.decode('utf-8')
-        elif cipher_type == "vigenere":
-            pass
+        try:
+            result = self.ffi.string(result_ptr).decode("utf-8")
+        except Exception as e:
+            print(f"Failed to decode result: {e}")
+            return "Error decoding result"
 
-        # Return placeholder for now
-        direction = "encrypted" if encrypt else "decrypted"
-        return f"[{direction} with {cipher_type}]: {text}"
+        os.remove("cipher_input.txt")
+        return result
     
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

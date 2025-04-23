@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": ".",
-      "program": "build/Debug/outDebug",
+      "cwd": "d:/Work/01-Projects/02_Desktop-dev/Python/PyQt-Projects/crypto-ciphers/classical-ciphers",
+      "program": "d:/Work/01-Projects/02_Desktop-dev/Python/PyQt-Projects/crypto-ciphers/classical-ciphers/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
