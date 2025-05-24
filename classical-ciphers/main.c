@@ -10,6 +10,11 @@
 #include <ctype.h>
 #include "playfair.h"
 #include "caesar.h"
+#include "vigenere.h"
+#include "substitution.h"
+#include "indice_coincidence.h"
+#include "Analyse_frequentielle.h"
+#include "affine.h"
 
 #define SIZE 5
 static char result_buffer[1000];
@@ -76,6 +81,73 @@ EXPORT const char* handle_cipher_file(const char* filename) {
                 free(decrypted);
             }
         }
+        return result_buffer;
+    }
+
+    if (strcmp(cipher, "vigenere") == 0) {
+        char result[1000] = {0};
+        if (strcmp(mode, "encrypt") == 0) {
+            vigenere_chiffrer(plain_text, prv_key, result);
+        } else {
+            vigenere_dechiffrer(plain_text, prv_key, result);
+        }
+        snprintf(result_buffer, sizeof(result_buffer), "%s", result);
+        return result_buffer;
+    }
+
+    if (strcmp(cipher, "substitution") == 0) {
+        char table_originale[ALPHABET_SIZE + 1] = {0};
+        char table_substituee[ALPHABET_SIZE + 1] = {0};
+        if (strlen(prv_key) == 0) {
+            genererTableAleatoire(table_originale, table_substituee);
+        } else {
+            strcpy(table_substituee, prv_key);
+            char alphabet[ALPHABET_SIZE + 1] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            strcpy(table_originale, alphabet);
+        }
+        
+        printf("Original Table: %s\n", table_originale);
+        printf("Substituted Table: %s\n", table_substituee);
+        
+        char result[1000] = {0};
+        if (strcmp(mode, "encrypt") == 0) {
+            chiffrer(plain_text, result, table_originale, table_substituee);
+        } else {
+            dechiffrer(plain_text, result, table_originale, table_substituee);
+        }
+        snprintf(result_buffer, sizeof(result_buffer), "%s", result);
+        return result_buffer;
+    }
+
+    if (strcmp(cipher, "Coincidence_index") == 0) {
+        double ic = calculer_indice_coincidence(plain_text);
+        snprintf(result_buffer, sizeof(result_buffer), "Index of Coincidence: %.6f", ic);
+        return result_buffer;
+    }
+    
+    if (strcmp(cipher, "Analyse_frequentielle") == 0) {
+        int frequences[ALPHABET_SIZE] = {0};
+        int total_lettres = 0;
+        analyse_frequentielle(plain_text, frequences, &total_lettres);
+        printFrequenciestable(frequences, total_lettres);
+        snprintf(result_buffer, sizeof(result_buffer), "Analysis complete. Check console output for frequency table.");
+        return result_buffer;
+    }
+
+    if (strcmp(cipher,"affine")==0){
+        int a, b;
+        char result[1000] = {0};
+        if (sscanf(prv_key, "%d,%d", &a, &b) != 2) {
+            snprintf(result_buffer, sizeof(result_buffer), "Error: Affine key should be in format 'a,b'");
+            return result_buffer;
+        }
+        
+        if (strcmp(mode, "encrypt") == 0) {
+            affine_encrypt(plain_text, a, b, result);
+        } else {
+            affine_decrypt(plain_text, a, b, result);
+        }
+        snprintf(result_buffer, sizeof(result_buffer), "%s", result);
         return result_buffer;
     }
 

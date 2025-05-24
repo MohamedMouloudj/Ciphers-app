@@ -7,17 +7,21 @@
 
 // Générer une table de substitution aléatoire
 void genererTableAleatoire(char table_originale[], char table_substituee[]) {
-    char alphabet[ALPHABET_SIZE] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char alphabet[ALPHABET_SIZE + 1] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     strcpy(table_originale, alphabet);
     
-    // Mélanger aléatoirement l'alphabet pour obtenir une substitution
-    for (int i = 0; i < ALPHABET_SIZE; i++) {
-        int j = rand() % ALPHABET_SIZE;
-        char temp = alphabet[i];
-        alphabet[i] = alphabet[j];
-        alphabet[j] = temp;
+    // Copier l'alphabet avant de le mélanger
+    char shuffled[ALPHABET_SIZE + 1];
+    strcpy(shuffled, alphabet);
+    
+    // Mélanger aléatoirement l'alphabet avec l'algorithme Fisher-Yates
+    for (int i = ALPHABET_SIZE - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        char temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
     }
-    strcpy(table_substituee, alphabet);
+    strcpy(table_substituee, shuffled);
 }
 
 // Saisie manuelle de la table de substitution

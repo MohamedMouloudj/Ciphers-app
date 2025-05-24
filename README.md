@@ -59,7 +59,7 @@ cipher-app/
    For Windows:
 
    ```
-   gcc -shared -o main.so -fPIC main.c <other_ciphers>.c
+   gcc -shared -o main.dll -fPIC main.c <other_ciphers>.c
    ```
 
 ## Usage

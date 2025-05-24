@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
+#include "analyse_frequentielle.h"
 
 #define ALPHABET_SIZE 26
 
@@ -22,16 +24,7 @@ void analyse_frequentielle(const char *texte, int frequences[], int *total_lettr
     }
 }
 
-int main() {
-    char texte[1000];
-    int frequences[ALPHABET_SIZE];
-    int total_lettres;
-    
-    printf("Entrez le texte à analyser:\n");
-    fgets(texte, sizeof(texte), stdin);
-    
-    analyse_frequentielle(texte, frequences, &total_lettres);
-    
+void printFrequenciestable(int frequences[ALPHABET_SIZE], int total_lettres) {
     printf("Lettre | Fréquence | Pourcentage\n");
     printf("--------------------------------\n");
     for (int i = 0; i < ALPHABET_SIZE; i++) {
@@ -40,6 +33,26 @@ int main() {
             printf("%c      | %d        | %.2f%%\n", 'a' + i, frequences[i], pourcentage);
         }
     }
-    
-    return 0;
 }
+
+// int main() {
+//     char texte[1000];
+//     int frequences[ALPHABET_SIZE];
+//     int total_lettres;
+    
+//     printf("Entrez le texte à analyser:\n");
+//     fgets(texte, sizeof(texte), stdin);
+    
+//     analyse_frequentielle(texte, frequences, &total_lettres);
+    
+//     printf("Lettre | Fréquence | Pourcentage\n");
+//     printf("--------------------------------\n");
+//     for (int i = 0; i < ALPHABET_SIZE; i++) {
+//         if (frequences[i] > 0) {
+//             double pourcentage = (frequences[i] / (double)total_lettres) * 100.0;
+//             printf("%c      | %d        | %.2f%%\n", 'a' + i, frequences[i], pourcentage);
+//         }
+//     }
+    
+//     return 0;
+// }

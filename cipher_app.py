@@ -3,15 +3,17 @@ import platform
 from PyQt5 import QtWidgets, uic
 import cffi
 import os
+import math
 
 # This is the list of libraries we will use for the ciphers
 libraries=[
     "caesar",
     "vigenere",
+    "playfair",
+    "affine",
     "substitution",
     "Analyse_frequentielle",
     "Coincidence_index", 
-    "playfair",
 ]
 
 def get_shared_library(lib_name):
@@ -66,43 +68,98 @@ class CipherApp(QtWidgets.QWidget):
             self.prvInput.setPlaceholderText("Enter a number (1-25)")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
+
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+            self.encryptInput.setPlaceholderText("Enter text to encrypt")
         elif cipher == "Analyse_frequentielle":
-            self.prvInput.setPlaceholderText("Enter a text")
+            self.prvInput.setPlaceholderText("")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
+
+            self.prvInput.setEnabled(False)
+            self.decryptInput.setEnabled(False)
+            self.encryptInput.setPlaceholderText("Enter a text to analyze")
         elif cipher == "Coincidence_index":
-            self.prvInput.setPlaceholderText("Enter a text")
+            self.prvInput.setPlaceholderText("")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
+
+            self.prvInput.setEnabled(False)
+            self.decryptInput.setEnabled(False)
+            self.encryptInput.setPlaceholderText("Enter a text to analyze")
         elif cipher == "vigenere":
             self.prvInput.setPlaceholderText("Enter a keyword")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
+
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+            self.encryptInput.setPlaceholderText("Enter text to encrypt")
         elif cipher == "substitution":
             self.prvInput.setPlaceholderText("Enter 26 letters (a-z)")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
+
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+            self.encryptInput.setPlaceholderText("Enter text to encrypt")
         elif cipher == "playfair":
             self.prvInput.setPlaceholderText("Enter a keyword")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
-        elif cipher == "RSA":
+
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+            self.encryptInput.setPlaceholderText("Enter text to encrypt")
+        elif cipher == "affine":
+            self.prvInput.setPlaceholderText("Enter a,b (comma separated)")
+            self.pubInput.setPlaceholderText("")
+            self.pubInput.setEnabled(False)
+
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+            self.encryptInput.setPlaceholderText("Enter text to encrypt")
+        elif cipher == "RSA (2048)":
+            self.prvInput.setPlaceholderText("Private key (PEM format)")
+            self.pubInput.setPlaceholderText("Public key (PEM format)")
+            self.pubInput.setEnabled(True)
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+        elif cipher == "ElGamal":
             self.prvInput.setPlaceholderText("Private key")
             self.pubInput.setPlaceholderText("Public key")
             self.pubInput.setEnabled(True)
-        elif cipher == "AES":
-            self.prvInput.setPlaceholderText("Enter key (16, 24, or 32 bytes)")
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+        elif cipher == "Diffie-Hellman":
+            self.prvInput.setPlaceholderText("Private key")
+            self.pubInput.setPlaceholderText("Public key")
+            self.pubInput.setEnabled(True)
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+        elif cipher == "AES (128)":
+            self.prvInput.setPlaceholderText("Enter key (16 bytes)")
             self.pubInput.setPlaceholderText("")
             self.pubInput.setEnabled(False)
-    
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+        elif cipher == "DES":
+            self.prvInput.setPlaceholderText("Enter key (8 bytes)")
+            self.pubInput.setPlaceholderText("")
+            self.pubInput.setEnabled(False)
+            self.prvInput.setEnabled(True)
+            self.decryptInput.setEnabled(True)
+
     def process_cipher(self):
         """Process the encryption/decryption when Launch button is clicked"""
         cipher = self.cipherCombo.currentText()
-        prv_key = self.prvInput.text()
+        prv_key = self.prvInput.text() if self.prvInput.text() else ''
         pub_key = self.pubInput.text()
         encrypt_text = self.encryptInput.toPlainText()
         decrypt_text = self.decryptInput.toPlainText()
-        if cipher == "playfair":
+        # Validate keys based on cipher
+        if cipher == "playfair" or cipher == "substitution":
             if encrypt_text:
                 encrypt_text = ''.join(filter(str.isalpha, encrypt_text)).upper()
                 self.encryptInput.setPlainText(encrypt_text)
@@ -110,8 +167,73 @@ class CipherApp(QtWidgets.QWidget):
             if decrypt_text:
                 decrypt_text = ''.join(filter(str.isalpha, decrypt_text)).upper()
                 self.decryptInput.setPlainText(decrypt_text)
+        elif cipher == "caesar":
+            if encrypt_text:
+                try:
+                    shift = int(prv_key)
+                    if not (1 <= shift <= 25):
+                        raise ValueError("Shift must be between 1 and 25")
+                    encrypt_text = ''.join(filter(str.isalpha, encrypt_text)).upper()
+                    self.encryptInput.setPlainText(encrypt_text)
+                except ValueError as e:
+                    QtWidgets.QMessageBox.warning(self, "Input Error", str(e))
+                    return
+    
+            if decrypt_text:
+                try:
+                    shift = int(prv_key)
+                    if not (1 <= shift <= 25):
+                        raise ValueError("Shift must be between 1 and 25")
+                    decrypt_text = ''.join(filter(str.isalpha, decrypt_text)).upper()
+                    self.decryptInput.setPlainText(decrypt_text)
+                except ValueError as e:
+                    QtWidgets.QMessageBox.warning(self, "Input Error", str(e))
+                    return
+        elif cipher == "vigenere":
+            if encrypt_text:
+                encrypt_text = ''.join(filter(str.isalpha, encrypt_text)).upper()
+                self.encryptInput.setPlainText(encrypt_text)
+    
+            if decrypt_text:
+                decrypt_text = ''.join(filter(str.isalpha, decrypt_text)).upper()
+                self.decryptInput.setPlainText(decrypt_text)
+        elif cipher == "Analyse_frequentielle" or cipher == "Coincidence_index":
+            if encrypt_text:
+                encrypt_text = ''.join(filter(str.isalpha, encrypt_text))
+                self.encryptInput.setPlainText(encrypt_text)
+            if decrypt_text:
+                decrypt_text = ''.join(filter(str.isalpha, decrypt_text))
+                self.decryptInput.setPlainText(decrypt_text)
 
-        
+        elif cipher == "affine":
+            if encrypt_text:
+                try:
+                    a, b = map(int, prv_key.split(','))
+                    if a <= 0 or b < 0:
+                        raise ValueError("Invalid affine key")
+                    if (not math.gcd(a, 26) == 1):
+                        raise ValueError("a must be coprime with 26")
+                    encrypt_text = ''.join(filter(str.isalpha, encrypt_text))
+                    self.encryptInput.setPlainText(encrypt_text)
+                except ValueError as e:
+                    QtWidgets.QMessageBox.warning(self, "Input Error", str(e))
+                    return
+    
+            if decrypt_text:
+                try:
+                    a, b = map(int, prv_key.split(','))
+                    if a <= 0 or b < 0:
+                        raise ValueError("Invalid affine key")
+                    if (not math.gcd(a, 26) == 1):
+                        raise ValueError("a must be coprime with 26")
+                    decrypt_text = ''.join(filter(str.isalpha, decrypt_text))
+                    self.decryptInput.setPlainText(decrypt_text)
+                except ValueError as e:
+                    QtWidgets.QMessageBox.warning(self, "Input Error", str(e))
+                    return
+
+
+        # Start processing based on input
         if encrypt_text and not decrypt_text:
             # Encryption mode
             result = self.call_c_cipher(encrypt_text, prv_key, pub_key, cipher, encrypt=True)
