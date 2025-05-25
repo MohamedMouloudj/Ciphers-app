@@ -6,11 +6,16 @@ A comprehensive application that provides a graphical user interface built with 
 
 - Support for multiple cipher algorithms:
   - Caesar
+  - Hill
+  - Affine
+  - Playfair
   - Vigenere
   - Substitution
-  - RSA
+  - RC4
+  - DES
   - AES
-  - DES....
+  - RSA
+  - ElGamal
 - User-friendly PyQt5 interface for entering plaintext and ciphertext
 - Dynamic key input fields that adapt based on the selected cipher
 - High-performance cipher implementations in C
@@ -23,6 +28,7 @@ cipher-app/
 ├── cipher_app.py    # Main PyQt5 application
 ├── ciphers-list.ui  # UI design file created with Qt Designer
 ├── classical-ciphers # Directory for classical cipher implementations
+│   ├── [ciphers].h   # Header files for each cipher algorithm
 │   └── [ciphers].c   # C source files for each cipher algorithm
 ├── requirements.txt # Python dependencies
 └── README.md        # Project documentation
@@ -43,14 +49,17 @@ cipher-app/
    pip install -r requirements.txt
    ```
 
-3. Optional - Compile your C cipher library into a shared object file (`.so` or `.dll` depending on your OS):
+3. Optional - To add your C cipher library, add the condition b;ock in `main.c` and compile it into a shared object file (`.so` or `.dll` depending on your OS) with ypur c file linked to it. For example, if you have a file `other_ciphers.c` with additional cipher implementations, you can compile it as follows:
    For Linux/MacOS:
+
    ```
-   gcc -shared -o cipher.so -fPIC ciphers.c
+   gcc -shared -o main.so -fPIC main.c <other_ciphers>.c
    ```
+
    For Windows:
+
    ```
-   gcc -shared -o cipher.dll -fPIC ciphers.c
+   gcc -shared -o main.dll -fPIC main.c <other_ciphers>.c
    ```
 
 ## Usage
@@ -86,16 +95,17 @@ char* cipher_decrypt(const char* input, char* key);
 
 ### Python-C Integration
 
-The Python application uses cffi to load and call the C functions:
+The Python application uses cffi to load and call the C main function:
 
 ```python
 import cffi
-ffi = cffi.FFI()
-ffi.cdef("""
-    char* cipher_encrypt(const char* input, char* key);
-    char*int cipher_decrypt(const char* input, char* key);
+self.ffi = cffi.FFI()
+...
+lib_name = "classical-ciphers/main"
+self.ffi.cdef("""
+      const char* handle_cipher_file(const char* filename);
 """)
-lib = ffi.dlopen("cipher.so")  # Load the shared library
+self.cipher_lib = self.ffi.dlopen(get_shared_library(lib_name))
 ```
 
 ## Extending the Application

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "hill.h"
 
 #define MODULUS 26
 #define MAX_TEXT_LENGTH 1000
@@ -46,7 +47,7 @@ int isValidKey(int keyMatrix[2][2]) {
 }
 
 // Function to clean and prepare text for encryption/decryption
-void prepareText(char *input, char *output) {
+void prepareTextHill(char *input, char *output) {
     int j = 0;
     for (int i = 0; input[i] != '\0'; i++) {
         if (isalpha(input[i])) {
@@ -156,123 +157,123 @@ int getIntInput() {
 }
 
 // Main function with enhanced user interface and robust input handling
-int main() {
-    int keyMatrix[2][2];
-    char input[MAX_TEXT_LENGTH], processed[MAX_TEXT_LENGTH], result[MAX_TEXT_LENGTH];
-    int choice;
-    int validKey = 0;
+// int main() {
+//     int keyMatrix[2][2];
+//     char input[MAX_TEXT_LENGTH], processed[MAX_TEXT_LENGTH], result[MAX_TEXT_LENGTH];
+//     int choice;
+//     int validKey = 0;
     
-    printf("======================================\n");
-    printf("        HILL CIPHER ALGORITHM         \n");
-    printf("======================================\n\n");
+//     printf("======================================\n");
+//     printf("        HILL CIPHER ALGORITHM         \n");
+//     printf("======================================\n\n");
     
-    // Keep asking for key matrix until a valid one is provided
-    while (!validKey) {
-        printf("Enter the 2x2 key matrix values (0-25):\n");
+//     // Keep asking for key matrix until a valid one is provided
+//     while (!validKey) {
+//         printf("Enter the 2x2 key matrix values (0-25):\n");
         
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2; j++) {
-                printf("Enter element [%d][%d]: ", i, j);
-                keyMatrix[i][j] = getIntInput();
+//         for (int i = 0; i < 2; i++) {
+//             for (int j = 0; j < 2; j++) {
+//                 printf("Enter element [%d][%d]: ", i, j);
+//                 keyMatrix[i][j] = getIntInput();
                 
-                // Ensure values are within valid range
-                keyMatrix[i][j] = keyMatrix[i][j] % MODULUS;
-                if (keyMatrix[i][j] < 0) {
-                    keyMatrix[i][j] += MODULUS;
-                }
-            }
-        }
+//                 // Ensure values are within valid range
+//                 keyMatrix[i][j] = keyMatrix[i][j] % MODULUS;
+//                 if (keyMatrix[i][j] < 0) {
+//                     keyMatrix[i][j] += MODULUS;
+//                 }
+//             }
+//         }
         
-        // Check if the key is valid
-        if (!isValidKey(keyMatrix)) {
-            printf("\nERROR: The key matrix is not invertible. Choose a different key.\n");
-            printf("Hint: The determinant must have a modular inverse modulo 26.\n\n");
-            printf("Let's try again with a different key matrix.\n\n");
-        } else {
-            validKey = 1;
-        }
-    }
+//         // Check if the key is valid
+//         if (!isValidKey(keyMatrix)) {
+//             printf("\nERROR: The key matrix is not invertible. Choose a different key.\n");
+//             printf("Hint: The determinant must have a modular inverse modulo 26.\n\n");
+//             printf("Let's try again with a different key matrix.\n\n");
+//         } else {
+//             validKey = 1;
+//         }
+//     }
     
-    // Display the key matrix
-    printf("\nYour key matrix is:\n");
-    for (int i = 0; i < 2; i++) {
-        printf("[ ");
-        for (int j = 0; j < 2; j++) {
-            printf("%2d ", keyMatrix[i][j]);
-        }
-        printf("]\n");
-    }
+//     // Display the key matrix
+//     printf("\nYour key matrix is:\n");
+//     for (int i = 0; i < 2; i++) {
+//         printf("[ ");
+//         for (int j = 0; j < 2; j++) {
+//             printf("%2d ", keyMatrix[i][j]);
+//         }
+//         printf("]\n");
+//     }
     
-    // Menu for operation choice
-    do {
-        printf("\n======================================\n");
-        printf("Choose an operation:\n");
-        printf("1. Encrypt a message\n");
-        printf("2. Decrypt a message\n");
-        printf("3. Exit\n");
-        printf("Enter your choice (1-3): ");
+//     // Menu for operation choice
+//     do {
+//         printf("\n======================================\n");
+//         printf("Choose an operation:\n");
+//         printf("1. Encrypt a message\n");
+//         printf("2. Decrypt a message\n");
+//         printf("3. Exit\n");
+//         printf("Enter your choice (1-3): ");
         
-        int validChoice = 0;
-        while (!validChoice) {
-            if (scanf("%d", &choice) != 1) {
-                printf("Invalid input. Please enter a number (1-3): ");
-                while (getchar() != '\n'); // Clear input buffer
-                continue;
-            }
-            validChoice = 1;
-        }
+//         int validChoice = 0;
+//         while (!validChoice) {
+//             if (scanf("%d", &choice) != 1) {
+//                 printf("Invalid input. Please enter a number (1-3): ");
+//                 while (getchar() != '\n'); // Clear input buffer
+//                 continue;
+//             }
+//             validChoice = 1;
+//         }
         
-        while (getchar() != '\n'); // Clear input buffer
+//         while (getchar() != '\n'); // Clear input buffer
         
-        switch (choice) {
-            case 1: // Encryption
-                printf("\n=== ENCRYPTION ===\n");
-                printf("Enter the message to encrypt: ");
-                fgets(input, MAX_TEXT_LENGTH, stdin);
-                input[strcspn(input, "\n")] = 0; // Remove newline
+//         switch (choice) {
+//             case 1: // Encryption
+//                 printf("\n=== ENCRYPTION ===\n");
+//                 printf("Enter the message to encrypt: ");
+//                 fgets(input, MAX_TEXT_LENGTH, stdin);
+//                 input[strcspn(input, "\n")] = 0; // Remove newline
                 
-                prepareText(input, processed);
+//                 prepareText(input, processed);
                 
-                if (strlen(processed) == 0) {
-                    printf("\nWarning: No valid alphabetic characters found in the input.\n");
-                    break;
-                }
+//                 if (strlen(processed) == 0) {
+//                     printf("\nWarning: No valid alphabetic characters found in the input.\n");
+//                     break;
+//                 }
                 
-                printf("\nProcessed input (uppercase, no spaces): %s\n", processed);
+//                 printf("\nProcessed input (uppercase, no spaces): %s\n", processed);
                 
-                encrypt(processed, keyMatrix, result);
+//                 encrypt(processed, keyMatrix, result);
                 
-                printf("Encrypted message: %s\n", result);
-                break;
+//                 printf("Encrypted message: %s\n", result);
+//                 break;
                 
-            case 2: // Decryption
-                printf("\n=== DECRYPTION ===\n");
-                printf("Enter the message to decrypt (uppercase letters only): ");
-                fgets(input, MAX_TEXT_LENGTH, stdin);
-                input[strcspn(input, "\n")] = 0; // Remove newline
+//             case 2: // Decryption
+//                 printf("\n=== DECRYPTION ===\n");
+//                 printf("Enter the message to decrypt (uppercase letters only): ");
+//                 fgets(input, MAX_TEXT_LENGTH, stdin);
+//                 input[strcspn(input, "\n")] = 0; // Remove newline
                 
-                prepareText(input, processed);
+//                 prepareText(input, processed);
                 
-                if (strlen(processed) == 0) {
-                    printf("\nWarning: No valid alphabetic characters found in the input.\n");
-                    break;
-                }
+//                 if (strlen(processed) == 0) {
+//                     printf("\nWarning: No valid alphabetic characters found in the input.\n");
+//                     break;
+//                 }
                 
-                printf("\nProcessed input: %s\n", processed);
+//                 printf("\nProcessed input: %s\n", processed);
                 
-                decrypt(processed, keyMatrix, result);
+//                 decrypt(processed, keyMatrix, result);
                 
-                printf("Decrypted message: %s\n", result);
-                break;
+//                 printf("Decrypted message: %s\n", result);
+//                 break;
                 
-            case 3: // Exit
-                printf("\nExiting program. Goodbye!\n");
-                break;
+//             case 3: // Exit
+//                 printf("\nExiting program. Goodbye!\n");
+//                 break;
                 
-            default:
-                printf("\nInvalid choice. Please enter a number between 1 and 3.\n");
-        }
-    } while (choice != 3);
+//             default:
+//                 printf("\nInvalid choice. Please enter a number between 1 and 3.\n");
+//         }
+//     } while (choice != 3);
     
-    return 0;
-}
+//     return 0;
+// }

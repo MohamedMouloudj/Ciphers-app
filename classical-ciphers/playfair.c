@@ -1,66 +1,12 @@
-/**
- * Playfair Cipher Implementation in C
- */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "playfair.h"
 
 #define SIZE 5
 #define ALPHABET_SIZE 26
-
-// Function prototypes
-void prepareKey(char *key, char matrix[SIZE][SIZE]);
-void prepareText(char *text);
-void encrypt(char *text, char matrix[SIZE][SIZE], char *result);
-void decrypt(char *text, char matrix[SIZE][SIZE], char *result);
-void findPosition(char matrix[SIZE][SIZE], char ch, int *row, int *col);
-void displayMatrix(char matrix[SIZE][SIZE]);
-
-int main() {
-    char key[100], text[1000], result[1000];
-    char matrix[SIZE][SIZE];
-    int choice;
-    
-    printf("Playfair Cipher Implementation\n");
-    
-    printf("Enter the key: ");
-    fgets(key, sizeof(key), stdin);
-    key[strcspn(key, "\n")] = '\0';  // Remove newline
-    
-    prepareKey(key, matrix);
-    
-    printf("\nGenerated Playfair Matrix:\n");
-    displayMatrix(matrix);
-    
-    printf("\nEnter 1 for Encryption, 2 for Decryption: ");
-    scanf("%d", &choice);
-    getchar();  // Consume newline
-    
-    printf("Enter the text: ");
-    fgets(text, sizeof(text), stdin);
-    text[strcspn(text, "\n")] = '\0';  // Remove newline
-    
-    // Convert text to uppercase
-    for (int i = 0; text[i]; i++) {
-        text[i] = toupper(text[i]);
-    }
-    
-    prepareText(text);
-    
-    if (choice == 1) {
-        encrypt(text, matrix, result);
-        printf("\nEncrypted text: %s\n", result);
-    } else if (choice == 2) {
-        decrypt(text, matrix, result);
-        printf("\nDecrypted text: %s\n", result);
-    } else {
-        printf("\nInvalid choice!\n");
-    }
-    
-    return 0;
-}
 
 // Prepare the key matrix for Playfair cipher
 void prepareKey(char *key, char matrix[SIZE][SIZE]) {
@@ -144,7 +90,6 @@ void prepareText(char *text) {
     if (j % 2 != 0) {
         text[j++] = 'X';
     }
-    
     text[j] = '\0';
 }
 
@@ -164,7 +109,7 @@ void findPosition(char matrix[SIZE][SIZE], char ch, int *row, int *col) {
 }
 
 // Encrypt the plaintext using Playfair cipher
-void encrypt(char *text, char matrix[SIZE][SIZE], char *result) {
+void encryptPlayfair(char *text, char matrix[SIZE][SIZE], char *result) {
     int len = strlen(text);
     int row1, col1, row2, col2;
     int k = 0;
@@ -184,12 +129,11 @@ void encrypt(char *text, char matrix[SIZE][SIZE], char *result) {
             result[k++] = matrix[row2][col1];
         }
     }
-    
     result[k] = '\0';
 }
 
 // Decrypt the ciphertext using Playfair cipher
-void decrypt(char *text, char matrix[SIZE][SIZE], char *result) {
+void decryptPlayfair(char *text, char matrix[SIZE][SIZE], char *result) {
     int len = strlen(text);
     int row1, col1, row2, col2;
     int k = 0;
@@ -213,7 +157,7 @@ void decrypt(char *text, char matrix[SIZE][SIZE], char *result) {
     result[k] = '\0';
 }
 
-// Display the Playfair matrix
+// Display the Playfair matrix (for debugging purposes)
 void displayMatrix(char matrix[SIZE][SIZE]) {
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
@@ -222,3 +166,47 @@ void displayMatrix(char matrix[SIZE][SIZE]) {
         printf("\n");
     }
 }
+
+// int main() {
+//     char key[100], text[1000], result[1000];
+//     char matrix[SIZE][SIZE];
+//     int choice;
+    
+//     printf("Playfair Cipher Implementation\n");
+    
+//     printf("Enter the key: ");
+//     fgets(key, sizeof(key), stdin);
+//     key[strcspn(key, "\n")] = '\0';  // Remove newline
+    
+//     prepareKey(key, matrix);
+    
+//     printf("\nGenerated Playfair Matrix:\n");
+//     displayMatrix(matrix);
+    
+//     printf("\nEnter 1 for Encryption, 2 for Decryption: ");
+//     scanf("%d", &choice);
+//     getchar();  // Consume newline
+    
+//     printf("Enter the text: ");
+//     fgets(text, sizeof(text), stdin);
+//     text[strcspn(text, "\n")] = '\0';  // Remove newline
+    
+//     // Convert text to uppercase
+//     for (int i = 0; text[i]; i++) {
+//         text[i] = toupper(text[i]);
+//     }
+    
+//     prepareText(text);
+    
+//     if (choice == 1) {
+//         encryptPlayfair(text, matrix, result);
+//         printf("\nEncrypted text: %s\n", result);
+//     } else if (choice == 2) {
+//         decryptPlayfair(text, matrix, result);
+//         printf("\nDecrypted text: %s\n", result);
+//     } else {
+//         printf("\nInvalid choice!\n");
+//     }
+    
+//     return 0;
+// }

@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
+#include "analyse_frequentielle.h"
 
 #define ALPHABET_SIZE 26
+
+//Function prototypes
+void analyse_frequentielle(const char *texte, int frequences[], int *total_lettres);
 
 void analyse_frequentielle(const char *texte, int frequences[], int *total_lettres) {
     *total_lettres = 0;
@@ -15,6 +20,17 @@ void analyse_frequentielle(const char *texte, int frequences[], int *total_lettr
         if (c >= 'a' && c <= 'z') {
             frequences[c - 'a']++;
             (*total_lettres)++;
+        }
+    }
+}
+
+void printFrequenciestable(int frequences[ALPHABET_SIZE], int total_lettres) {
+    printf("Lettre | Fréquence | Pourcentage\n");
+    printf("--------------------------------\n");
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        if (frequences[i] > 0) {
+            double pourcentage = (frequences[i] / (double)total_lettres) * 100.0;
+            printf("%c      | %d        | %.2f%%\n", 'a' + i, frequences[i], pourcentage);
         }
     }
 }

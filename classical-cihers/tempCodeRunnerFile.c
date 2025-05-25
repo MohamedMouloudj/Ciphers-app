@@ -1,1 +1,0 @@
-/ Ensure null termination
