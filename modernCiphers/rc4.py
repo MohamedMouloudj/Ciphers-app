@@ -37,7 +37,7 @@ def rc4_encrypt(plain_text, key):
         encrypted_bytes = rc4_encrypt_decrypt(plain_text, key)
         return base64.b64encode(encrypted_bytes).decode('utf-8')
     except Exception as e:
-        return f"Encryption Error: {str(e)}"
+        raise ValueError(f"Encryption Error: {str(e)}")
 
 def rc4_decrypt(cipher_text_base64, key):
     """Decrypt base64 encoded RC4 ciphertext"""
@@ -46,4 +46,4 @@ def rc4_decrypt(cipher_text_base64, key):
         decrypted_bytes = rc4_encrypt_decrypt(encrypted_bytes, key)
         return decrypted_bytes.decode('utf-8')
     except Exception as e:
-        return f"Decryption Error: {str(e)}"
+        raise ValueError(f"Decryption Error: {str(e)}")

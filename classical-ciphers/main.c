@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdint.h>
 #include "playfair.h"
 #include "caesar.h"
 #include "vigenere.h"
@@ -16,6 +17,8 @@
 #include "Analyse_frequentielle.h"
 #include "affine.h"
 #include "hill.h"
+#include "md5.h"
+#include "sha256.h"
 
 #define SIZE 5
 #define MAX_TEXT_LENGTH 1000
@@ -194,6 +197,99 @@ EXPORT const char* handle_cipher_file(const char* filename) {
         }
 
         snprintf(result_buffer, sizeof(result_buffer), "%s", result);
+        return result_buffer;
+    }
+
+    if (strcmp(cipher, "MD5") == 0) {
+        uint8_t hash[16];
+        char hex_output[33];
+        
+        // MD5 is a hash function, so mode doesn't matter for the core operation
+        // But we can use mode to determine output format or validation
+        
+        if (strlen(plain_text) == 0) {
+            snprintf(result_buffer, sizeof(result_buffer), "Error: No text provided for MD5 hashing");
+            return result_buffer;
+        }
+        
+        // Generate MD5 hash
+        md5_encrypt((const uint8_t*)plain_text, strlen(plain_text), hash);
+        
+        // Convert hash to hexadecimal string
+        md5_hash_to_hex(hash, hex_output);
+        
+        if (strcmp(mode, "encrypt") == 0 || strcmp(mode, "hash") == 0) {
+            // Return the MD5 hash
+            snprintf(result_buffer, sizeof(result_buffer), "%s", hex_output);
+        } else if (strcmp(mode, "verify") == 0) {
+            // Verify mode: compare with provided hash in pub_key field
+            if (strlen(pub_key) != 32) {
+                snprintf(result_buffer, sizeof(result_buffer), 
+                        "Error: For verification, provide expected MD5 hash (32 hex chars) in pub_key field");
+                return result_buffer;
+            }
+            
+            // Convert expected hash from hex string to bytes
+            uint8_t expected_hash[16];
+            int i;
+            for (i = 0; i < 16; i++) {
+                unsigned int byte_val;
+                if (sscanf(pub_key + (i * 2), "%2x", &byte_val) != 1) {
+                    snprintf(result_buffer, sizeof(result_buffer), 
+                            "Error: Invalid hex format in expected hash");
+                    return result_buffer;
+                }
+                expected_hash[i] = (uint8_t)byte_val;
+            }
+            
+            // Compare hashes
+            if (md5_compare_hashes(hash, expected_hash) == 0) {
+                snprintf(result_buffer, sizeof(result_buffer), 
+                        "MATCH: Hash verification successful - %s", hex_output);
+            } else {
+                snprintf(result_buffer, sizeof(result_buffer), 
+                        "MISMATCH: Expected %s, Got %s", pub_key, hex_output);
+            }
+        } else {
+            snprintf(result_buffer, sizeof(result_buffer), 
+                    "Error: Unsupported mode '%s' for MD5. Use 'encrypt', 'hash', or 'verify'", mode);
+            return result_buffer;
+        }
+        
+        return result_buffer;
+    }
+
+    if (strcmp(cipher, "SHA-256") == 0) {
+        uint8_t hash[32];
+        char hex_output[65];
+        
+        if (strcmp(mode, "encrypt") == 0 || strcmp(mode, "hash") == 0) {
+            // Compute SHA-256 hash
+            sha256_encrypt((const uint8_t*)plain_text, strlen(plain_text), hash);
+            sha256_hash_to_hex(hash, hex_output);
+            snprintf(result_buffer, sizeof(result_buffer), "%s", hex_output);
+        } else if (strcmp(mode, "verify") == 0) {
+            // Verify hash against expected value (prv_key contains expected hash)
+            if (strlen(prv_key) != 64) {
+                snprintf(result_buffer, sizeof(result_buffer), 
+                        "Error: SHA-256 hash should be 64 hex characters");
+                return result_buffer;
+            }
+            
+            sha256_encrypt((const uint8_t*)plain_text, strlen(plain_text), hash);
+            sha256_hash_to_hex(hash, hex_output);
+            
+            if (strcmp(hex_output, prv_key) == 0) {
+                snprintf(result_buffer, sizeof(result_buffer), 
+                        "MATCH: Hash verification successful - %s", hex_output);
+            } else {
+                snprintf(result_buffer, sizeof(result_buffer), 
+                        "MISMATCH: Expected %s, Got %s", prv_key, hex_output);
+            }
+        } else {
+            snprintf(result_buffer, sizeof(result_buffer), 
+                    "Error: Unsupported mode for SHA-256. Use 'encrypt', 'hash', or 'verify'");
+        }
         return result_buffer;
     }
     

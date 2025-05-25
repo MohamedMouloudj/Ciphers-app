@@ -62,6 +62,7 @@
     "ctype.h": "c",
     "vigenere.h": "c",
     "analyse_frequentielle.h": "c",
-    "affine.h": "c"
+    "affine.h": "c",
+    "stdio.h": "c"
   }
 }

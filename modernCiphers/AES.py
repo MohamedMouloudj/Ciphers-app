@@ -333,4 +333,4 @@ def aes_decrypt(encrypted_data_base64, password):
         return plaintext.decode('utf-8')
         
     except Exception as e:
-        return f"Decryption Error: {str(e)}"
+        raise ValueError(f"Decryption Error: {str(e)}")
