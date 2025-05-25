@@ -5,17 +5,28 @@ A comprehensive application that provides a graphical user interface built with 
 ## Features
 
 - Support for multiple cipher algorithms:
+- Classical Ciphers:
   - Caesar
-  - Hill
-  - Affine
-  - Playfair
   - Vigenere
+  - Playfair
+  - Affine
+  - Hill
   - Substitution
-  - RC4
+  - One-Time Pad
+- Cryptanalysis Tools:
+  - Frequency Analysis
+  - Index of Coincidence
+- Symmetric Encryption:
   - DES
-  - AES
-  - RSA
+  - AES (128)
+  - RC4
+- Asymmetric Encryption:
+  - RSA (2048)
   - ElGamal
+  - Diffie-Hellman
+- Hashing Algorithms:
+  - MD5
+  - SHA-256
 - User-friendly PyQt5 interface for entering plaintext and ciphertext
 - Dynamic key input fields that adapt based on the selected cipher
 - High-performance cipher implementations in C
@@ -25,13 +36,18 @@ A comprehensive application that provides a graphical user interface built with 
 
 ```
 cipher-app/
-├── cipher_app.py    # Main PyQt5 application
-├── ciphers-list.ui  # UI design file created with Qt Designer
-├── classical-ciphers # Directory for classical cipher implementations
-│   ├── [ciphers].h   # Header files for each cipher algorithm
-│   └── [ciphers].c   # C source files for each cipher algorithm
-├── requirements.txt # Python dependencies
-└── README.md        # Project documentation
+├── cipher_app.py       # Main PyQt5 application
+├── ciphers-list.ui     # UI design file created with Qt Designer
+├── classical-ciphers   # Directory for classical cipher implementations
+│   ├── [ciphers].h     # Header files for each cipher algorithm
+│   └── [ciphers].c     # C source files for each cipher algorithm
+├── hashing             # Directory for hashing algorithm implementations
+│   ├── [hash_function].h  # Header files for hashing algorithms
+│   └── [hash_function].c  # C source files for hashing algorithms
+├── modernCiphers       # Directory for modern cipher implementations
+│   ├── [cipher].py     # Python wrapper for modern ciphers
+├── requirements.txt    # Python dependencies
+└── README.md           # Project documentation
 ```
 
 ## Installation
