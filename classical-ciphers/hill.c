@@ -1,34 +1,35 @@
+// hill.c - Hill Cipher Implementation
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "hill.h"
 
 #define MODULUS 26
 #define MAX_TEXT_LENGTH 1000
 
-// Function to calculate the determinant of a matrix
-int determinant(int a, int b, int c, int d) {
+// Internal helper functions
+static int determinant(int a, int b, int c, int d) {
     return (a * d - b * c);
 }
 
-// Function to calculate the modular multiplicative inverse
-int modInverse(int a) {
-    for (int i = 0; i < MODULUS; i++) {
+static int modInverse(int a) {
+    a = (a % MODULUS + MODULUS) % MODULUS;
+    for (int i = 1; i < MODULUS; i++) {
         if ((a * i) % MODULUS == 1)
             return i;
     }
     return -1; // No inverse exists
 }
 
-// Function to get adjoint matrix
-void adjoint(int keyMatrix[2][2], int adjMatrix[2][2]) {
-    // Swap a and d, negate b and c
+static void adjoint(int keyMatrix[2][2], int adjMatrix[2][2]) {
+    // For 2x2 matrix: adjoint swaps diagonal elements and negates off-diagonal
     adjMatrix[0][0] = keyMatrix[1][1];
     adjMatrix[1][1] = keyMatrix[0][0];
     adjMatrix[0][1] = -keyMatrix[0][1];
     adjMatrix[1][0] = -keyMatrix[1][0];
     
-    // Ensure all values are positive
+    // Ensure all values are positive in mod 26
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             adjMatrix[i][j] = (adjMatrix[i][j] % MODULUS + MODULUS) % MODULUS;
@@ -36,17 +37,13 @@ void adjoint(int keyMatrix[2][2], int adjMatrix[2][2]) {
     }
 }
 
-// Function to check if the key matrix is valid for the Hill cipher
-int isValidKey(int keyMatrix[2][2]) {
+static int isValidKey(int keyMatrix[2][2]) {
     int det = determinant(keyMatrix[0][0], keyMatrix[0][1], keyMatrix[1][0], keyMatrix[1][1]);
-    det = (det % MODULUS + MODULUS) % MODULUS; // Ensure positive value
-    
-    // Check if determinant has an inverse
+    det = (det % MODULUS + MODULUS) % MODULUS;
     return (modInverse(det) != -1);
 }
 
-// Function to clean and prepare text for encryption/decryption
-void prepareText(char *input, char *output) {
+static void prepareText(const char *input, char *output) {
     int j = 0;
     for (int i = 0; input[i] != '\0'; i++) {
         if (isalpha(input[i])) {
@@ -55,7 +52,7 @@ void prepareText(char *input, char *output) {
     }
     output[j] = '\0';
     
-    // Ensure length is even by padding with 'X' if necessary
+    // Pad with 'X' if odd length
     int len = strlen(output);
     if (len % 2 != 0) {
         output[len] = 'X';
@@ -63,26 +60,50 @@ void prepareText(char *input, char *output) {
     }
 }
 
-// Function to encrypt a message using the Hill cipher
-void encrypt(char *plaintext, int keyMatrix[2][2], char *ciphertext) {
-    int len = strlen(plaintext);
+// Exportable Functions
+
+/**
+ * Encrypt text using Hill cipher
+ * @param plaintext: Input text to encrypt
+ * @param keyMatrix: 2x2 key matrix (values 0-25)
+ * @param ciphertext: Output buffer (must be allocated by caller)
+ * @return: 0 on success, -1 on error
+ */
+int hill_encrypt(const char *plaintext, int keyMatrix[2][2], char *ciphertext) {
+    if (!plaintext || !keyMatrix || !ciphertext) {
+        return -1; // Invalid parameters
+    }
+    
+    // Validate key matrix
+    if (!isValidKey(keyMatrix)) {
+        return -1; // Invalid key matrix (determinant has no inverse)
+    }
+    
+    // Prepare text (remove non-alphabetic, convert to uppercase, pad if needed)
+    char prepared[MAX_TEXT_LENGTH];
+    prepareText(plaintext, prepared);
+    
+    int len = strlen(prepared);
+    if (len == 0) {
+        ciphertext[0] = '\0';
+        return 0;
+    }
+    
     int pos = 0;
     
     // Process pairs of characters
     for (int i = 0; i < len; i += 2) {
-        // If the length is odd, append 'X' for the last character
-        if (i + 1 >= len) {
-            plaintext[i + 1] = 'X';
-            len++;
-        }
-        
         // Convert letters to numbers (0-25)
-        int p1 = toupper(plaintext[i]) - 'A';
-        int p2 = toupper(plaintext[i + 1]) - 'A';
+        int p1 = prepared[i] - 'A';
+        int p2 = prepared[i + 1] - 'A';
         
-        // Apply the Hill cipher formula
+        // Apply Hill cipher matrix multiplication
         int c1 = (keyMatrix[0][0] * p1 + keyMatrix[0][1] * p2) % MODULUS;
         int c2 = (keyMatrix[1][0] * p1 + keyMatrix[1][1] * p2) % MODULUS;
+        
+        // Ensure positive values
+        c1 = (c1 + MODULUS) % MODULUS;
+        c2 = (c2 + MODULUS) % MODULUS;
         
         // Convert back to letters
         ciphertext[pos++] = c1 + 'A';
@@ -90,38 +111,73 @@ void encrypt(char *plaintext, int keyMatrix[2][2], char *ciphertext) {
     }
     
     ciphertext[pos] = '\0';
+    return 0;
 }
 
-// Function to decrypt a message using the Hill cipher
-void decrypt(char *ciphertext, int keyMatrix[2][2], char *plaintext) {
-    int len = strlen(ciphertext);
-    int pos = 0;
+/**
+ * Decrypt text using Hill cipher
+ * @param ciphertext: Input text to decrypt
+ * @param keyMatrix: 2x2 key matrix (values 0-25)
+ * @param plaintext: Output buffer (must be allocated by caller)
+ * @return: 0 on success, -1 on error
+ */
+int hill_decrypt(const char *ciphertext, int keyMatrix[2][2], char *plaintext) {
+    if (!ciphertext || !keyMatrix || !plaintext) {
+        return -1; // Invalid parameters
+    }
     
-    // Calculate the determinant and its modular inverse
+    // Validate key matrix
+    if (!isValidKey(keyMatrix)) {
+        return -1; // Invalid key matrix
+    }
+    
+    // Prepare text
+    char prepared[MAX_TEXT_LENGTH];
+    prepareText(ciphertext, prepared);
+    
+    int len = strlen(prepared);
+    if (len == 0) {
+        plaintext[0] = '\0';
+        return 0;
+    }
+    
+    // Calculate determinant and its modular inverse
     int det = determinant(keyMatrix[0][0], keyMatrix[0][1], keyMatrix[1][0], keyMatrix[1][1]);
-    det = (det % MODULUS + MODULUS) % MODULUS; // Ensure positive value
+    det = (det % MODULUS + MODULUS) % MODULUS;
     int detInverse = modInverse(det);
     
-    // Calculate the inverse key matrix
-    int inverseMatrix[2][2];
+    if (detInverse == -1) {
+        return -1; // Cannot decrypt - no inverse exists
+    }
+    
+    // Calculate inverse key matrix
     int adjMatrix[2][2];
+    int inverseMatrix[2][2];
+    
     adjoint(keyMatrix, adjMatrix);
     
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             inverseMatrix[i][j] = (detInverse * adjMatrix[i][j]) % MODULUS;
+            inverseMatrix[i][j] = (inverseMatrix[i][j] + MODULUS) % MODULUS;
         }
     }
+    
+    int pos = 0;
     
     // Process pairs of characters
     for (int i = 0; i < len; i += 2) {
         // Convert letters to numbers (0-25)
-        int c1 = toupper(ciphertext[i]) - 'A';
-        int c2 = toupper(ciphertext[i + 1]) - 'A';
+        int c1 = prepared[i] - 'A';
+        int c2 = prepared[i + 1] - 'A';
         
-        // Apply the inverse formula
+        // Apply inverse matrix multiplication
         int p1 = (inverseMatrix[0][0] * c1 + inverseMatrix[0][1] * c2) % MODULUS;
         int p2 = (inverseMatrix[1][0] * c1 + inverseMatrix[1][1] * c2) % MODULUS;
+        
+        // Ensure positive values
+        p1 = (p1 + MODULUS) % MODULUS;
+        p2 = (p2 + MODULUS) % MODULUS;
         
         // Convert back to letters
         plaintext[pos++] = p1 + 'A';
@@ -129,150 +185,77 @@ void decrypt(char *ciphertext, int keyMatrix[2][2], char *plaintext) {
     }
     
     plaintext[pos] = '\0';
-}
-
-// Function to safely get integer input with error handling
-int getIntInput() {
-    char buffer[100];
-    int value;
-    int valid = 0;
-    
-    while (!valid) {
-        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
-            printf("Error reading input. Please try again: ");
-            continue;
-        }
-        
-        // Check if input is a valid integer
-        if (sscanf(buffer, "%d", &value) != 1) {
-            printf("Invalid input. Please enter a number (0-25): ");
-            continue;
-        }
-        
-        valid = 1;
-    }
-    
-    return value;
-}
-
-// Main function with enhanced user interface and robust input handling
-int main() {
-    int keyMatrix[2][2];
-    char input[MAX_TEXT_LENGTH], processed[MAX_TEXT_LENGTH], result[MAX_TEXT_LENGTH];
-    int choice;
-    int validKey = 0;
-    
-    printf("======================================\n");
-    printf("        HILL CIPHER ALGORITHM         \n");
-    printf("======================================\n\n");
-    
-    // Keep asking for key matrix until a valid one is provided
-    while (!validKey) {
-        printf("Enter the 2x2 key matrix values (0-25):\n");
-        
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2; j++) {
-                printf("Enter element [%d][%d]: ", i, j);
-                keyMatrix[i][j] = getIntInput();
-                
-                // Ensure values are within valid range
-                keyMatrix[i][j] = keyMatrix[i][j] % MODULUS;
-                if (keyMatrix[i][j] < 0) {
-                    keyMatrix[i][j] += MODULUS;
-                }
-            }
-        }
-        
-        // Check if the key is valid
-        if (!isValidKey(keyMatrix)) {
-            printf("\nERROR: The key matrix is not invertible. Choose a different key.\n");
-            printf("Hint: The determinant must have a modular inverse modulo 26.\n\n");
-            printf("Let's try again with a different key matrix.\n\n");
-        } else {
-            validKey = 1;
-        }
-    }
-    
-    // Display the key matrix
-    printf("\nYour key matrix is:\n");
-    for (int i = 0; i < 2; i++) {
-        printf("[ ");
-        for (int j = 0; j < 2; j++) {
-            printf("%2d ", keyMatrix[i][j]);
-        }
-        printf("]\n");
-    }
-    
-    // Menu for operation choice
-    do {
-        printf("\n======================================\n");
-        printf("Choose an operation:\n");
-        printf("1. Encrypt a message\n");
-        printf("2. Decrypt a message\n");
-        printf("3. Exit\n");
-        printf("Enter your choice (1-3): ");
-        
-        int validChoice = 0;
-        while (!validChoice) {
-            if (scanf("%d", &choice) != 1) {
-                printf("Invalid input. Please enter a number (1-3): ");
-                while (getchar() != '\n'); // Clear input buffer
-                continue;
-            }
-            validChoice = 1;
-        }
-        
-        while (getchar() != '\n'); // Clear input buffer
-        
-        switch (choice) {
-            case 1: // Encryption
-                printf("\n=== ENCRYPTION ===\n");
-                printf("Enter the message to encrypt: ");
-                fgets(input, MAX_TEXT_LENGTH, stdin);
-                input[strcspn(input, "\n")] = 0; // Remove newline
-                
-                prepareText(input, processed);
-                
-                if (strlen(processed) == 0) {
-                    printf("\nWarning: No valid alphabetic characters found in the input.\n");
-                    break;
-                }
-                
-                printf("\nProcessed input (uppercase, no spaces): %s\n", processed);
-                
-                encrypt(processed, keyMatrix, result);
-                
-                printf("Encrypted message: %s\n", result);
-                break;
-                
-            case 2: // Decryption
-                printf("\n=== DECRYPTION ===\n");
-                printf("Enter the message to decrypt (uppercase letters only): ");
-                fgets(input, MAX_TEXT_LENGTH, stdin);
-                input[strcspn(input, "\n")] = 0; // Remove newline
-                
-                prepareText(input, processed);
-                
-                if (strlen(processed) == 0) {
-                    printf("\nWarning: No valid alphabetic characters found in the input.\n");
-                    break;
-                }
-                
-                printf("\nProcessed input: %s\n", processed);
-                
-                decrypt(processed, keyMatrix, result);
-                
-                printf("Decrypted message: %s\n", result);
-                break;
-                
-            case 3: // Exit
-                printf("\nExiting program. Goodbye!\n");
-                break;
-                
-            default:
-                printf("\nInvalid choice. Please enter a number between 1 and 3.\n");
-        }
-    } while (choice != 3);
-    
     return 0;
 }
+
+/**
+ * Validate Hill cipher key matrix
+ * @param keyMatrix: 2x2 key matrix to validate
+ * @return: 1 if valid, 0 if invalid
+ */
+int hill_validate_key(int keyMatrix[2][2]) {
+    if (!keyMatrix) return 0;
+    
+    // Check if all values are within valid range (0-25)
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (keyMatrix[i][j] < 0 || keyMatrix[i][j] >= MODULUS) {
+                return 0;
+            }
+        }
+    }
+    
+    return isValidKey(keyMatrix);
+}
+
+/**
+ * Get key validation requirements as a string
+ * @param buffer: Output buffer for requirements (must be allocated by caller)
+ * @param bufferSize: Size of the output buffer
+ */
+void hill_get_key_requirements(char *buffer, int bufferSize) {
+    if (!buffer || bufferSize < 200) return;
+    
+    snprintf(buffer, bufferSize,
+        "Hill Cipher Key Requirements:\n"
+        "- 2x2 matrix with integer values\n"
+        "- All values must be between 0-25\n"
+        "- Matrix determinant must be coprime to 26\n"
+        "- Common valid determinants: 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25\n"
+        "- Example valid key: [[3,2],[5,7]] (det=11)");
+}
+
+//Example usage and testing 
+// int main() {
+//     // Test key matrix (determinant = 3*7 - 2*5 = 11, which is coprime to 26)
+//     int key[2][2] = {{3, 2}, {5, 7}};
+    
+//     char plaintext[] = "HELLO ";
+//     char ciphertext[MAX_TEXT_LENGTH];
+//     char decrypted[MAX_TEXT_LENGTH];
+    
+//     printf("Original: %s\n", plaintext);
+    
+//     // Test encryption
+//     if (hill_encrypt(plaintext, key, ciphertext) == 0) {
+//         printf("Encrypted: %s\n", ciphertext);
+        
+//         // Test decryption
+//         if (hill_decrypt(ciphertext, key, decrypted) == 0) {
+//             printf("Decrypted: %s\n", decrypted);
+//         } else {
+//             printf("Decryption failed!\n");
+//         }
+//     } else {
+//         printf("Encryption failed!\n");
+//     }
+    
+//     // Test key validation
+//     printf("Key valid: %s\n", hill_validate_key(key) ? "Yes" : "No");
+    
+//     char requirements[500];
+//     hill_get_key_requirements(requirements, sizeof(requirements));
+//     printf("\n%s\n", requirements);
+    
+//     return 0;
+// }

@@ -15,8 +15,10 @@
 #include "indice_coincidence.h"
 #include "Analyse_frequentielle.h"
 #include "affine.h"
+#include "hill.h"
 
 #define SIZE 5
+#define MAX_TEXT_LENGTH 1000
 static char result_buffer[1000];
 
 EXPORT const char* handle_cipher_file(const char* filename) {
@@ -150,6 +152,51 @@ EXPORT const char* handle_cipher_file(const char* filename) {
         snprintf(result_buffer, sizeof(result_buffer), "%s", result);
         return result_buffer;
     }
+
+    if (strcmp(cipher, "hill") == 0) {
+        int key[2][2];
+        char result[1000] = {0};
+
+        // Parse the key from prv_key string (format: "a,b,c,d")
+        int values[4];
+        int scanned = sscanf(prv_key, "%d,%d,%d,%d", 
+                           &values[0], &values[1], 
+                           &values[2], &values[3]);
+
+        if (scanned != 4) {
+            snprintf(result_buffer, sizeof(result_buffer), 
+                    "Error: Hill key should be in format 'a,b,c,d' for 2x2 matrix");
+            return result_buffer;
+        }
+
+        // Fill the matrix
+        key[0][0] = values[0]; key[0][1] = values[1];
+        key[1][0] = values[2]; key[1][1] = values[3];
+
+        // Validate the key
+        if (!hill_validate_key(key)) {
+            snprintf(result_buffer, sizeof(result_buffer), 
+                    "Error: Invalid Hill cipher key (determinant must be coprime with 26)");
+            return result_buffer;
+        }
+
+        // Perform encryption or decryption
+        if (strcmp(mode, "encrypt") == 0) {
+            if (hill_encrypt(plain_text, key, result) != 0) {
+                snprintf(result_buffer, sizeof(result_buffer), "Error during Hill encryption");
+                return result_buffer;
+            }
+        } else {
+            if (hill_decrypt(plain_text, key, result) != 0) {
+                snprintf(result_buffer, sizeof(result_buffer), "Error during Hill decryption");
+                return result_buffer;
+            }
+        }
+
+        snprintf(result_buffer, sizeof(result_buffer), "%s", result);
+        return result_buffer;
+    }
+    
 
     snprintf(result_buffer, sizeof(result_buffer), "Unsupported cipher: %s", cipher);
     return result_buffer;
