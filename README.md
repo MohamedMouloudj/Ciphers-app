@@ -62,6 +62,12 @@ cipher-app/
    gcc -shared -o main.dll -fPIC main.c <other_ciphers>.c
    ```
 
+   E.g
+
+   ```
+   gcc -shared -o main.dll -fPIC -I../hashing main.c vigenere.c substitution.c playfair.c caesar.c Analyse_frequentielle.c indice_coincidence.c affine.c hill.c ../hashing/md5.c ../hashing/sha256.c
+   ```
+
 ## Usage
 
 1. Run the application (make sure you are in the project directory):

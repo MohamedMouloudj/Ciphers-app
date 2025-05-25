@@ -6,29 +6,46 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>585</width>
-    <height>300</height>
+    <width>646</width>
+    <height>340</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="maximumSize">
    <size>
-    <width>700</width>
+    <width>800</width>
     <height>500</height>
    </size>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>16</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="spacing">
+    <number>19</number>
+   </property>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="2,0,0">
+     <property name="spacing">
+      <number>15</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item alignment="Qt::AlignVCenter">
         <widget class="QLabel" name="label">
          <property name="font">
           <font>
-           <pointsize>16</pointsize>
+           <pointsize>10</pointsize>
            <weight>75</weight>
            <bold>true</bold>
           </font>
@@ -39,7 +56,13 @@
         </widget>
        </item>
        <item alignment="Qt::AlignVCenter">
-        <widget class="QComboBox" name="cipherCombo"/>
+        <widget class="QComboBox" name="cipherCombo">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -49,13 +72,24 @@
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <widget class="QLabel" name="prvKeyLabel">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>private key:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="prvInput"/>
+          <widget class="QLineEdit" name="prvInput">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -63,24 +97,61 @@
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QLabel" name="pubKeyLabel">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>public key:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="pubInput"/>
+          <widget class="QLineEdit" name="pubInput">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
       </layout>
      </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="font">
+        <font>
+         <pointsize>6</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Priority to Decrypt input if both are provided.</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
     <layout class="QFormLayout" name="formLayout_2">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
+     <property name="horizontalSpacing">
+      <number>5</number>
+     </property>
+     <property name="verticalSpacing">
+      <number>8</number>
+     </property>
      <item row="0" column="0">
       <widget class="QLabel" name="encryptLabel">
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Encrypt</string>
        </property>
@@ -97,7 +168,7 @@
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>50</height>
+         <height>70</height>
         </size>
        </property>
        <property name="maximumSize">
@@ -106,20 +177,39 @@
          <height>60</height>
         </size>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
       </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="decryptLabel">
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Decrypt</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QPlainTextEdit" name="decryptInput"/>
+      <widget class="QPlainTextEdit" name="decryptInput">
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+      </widget>
      </item>
      <item row="2" column="1">
       <widget class="QPushButton" name="launch">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="maximumSize">
         <size>
          <width>80</width>
@@ -578,6 +668,12 @@
        </property>
        <property name="text">
         <string>Launch</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>16</width>
+         <height>16</height>
+        </size>
        </property>
       </widget>
      </item>

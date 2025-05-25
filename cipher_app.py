@@ -29,6 +29,9 @@ libraries=[
     "SHA-256",
 ]
 
+HMAC_SIZE= 32  # Size of HMAC in bytes, used for hashing in some ciphers
+SALT_SIZE = 16  # Size of salt for key derivation, used in some ciphers
+
 def get_shared_library(lib_name):
     """Get the absolute path of the shared library based on the OS"""
     system_name = platform.system()
@@ -183,6 +186,13 @@ class CipherApp(QtWidgets.QWidget):
             self.pubInput.setEnabled(False)
             self.prvInput.setEnabled(True)
             self.decryptInput.setEnabled(True)
+        elif cipher == "MD5" or cipher == "SHA-256":
+            self.prvInput.setPlaceholderText("")
+            self.pubInput.setPlaceholderText("")
+            self.pubInput.setEnabled(False)
+            self.prvInput.setEnabled(False)
+            self.decryptInput.setEnabled(False)
+            self.encryptInput.setPlaceholderText("Enter text to hash")
 
     def process_cipher(self):
         """Process the encryption/decryption when Launch button is clicked"""
@@ -333,12 +343,16 @@ class CipherApp(QtWidgets.QWidget):
             if len(prv_key) < 1:
                 QtWidgets.QMessageBox.warning(self, "Input Error", "RC4 key must be at least 1 character long")
                 return
-            if encrypt_text:
-                result_enc= rc4_encrypt(encrypt_text, prv_key)
-                self.decryptInput.setPlainText(result_enc)
-            if decrypt_text:
-                result_dec = rc4_decrypt(decrypt_text, prv_key)
-                self.encryptInput.setPlainText(result_dec)
+            try:
+                if encrypt_text:
+                    result_enc= rc4_encrypt(encrypt_text, prv_key)
+                    self.decryptInput.setPlainText(result_enc)
+                if decrypt_text:
+                    result_dec = rc4_decrypt(decrypt_text, prv_key)
+                    self.encryptInput.setPlainText(result_dec)
+            except ValueError as e:
+                QtWidgets.QMessageBox.warning(self, "RC4 Error", f"Invalid RC4 input: {str(e)}")
+                return
         elif cipher == "AES (128)":
             if len(prv_key) != 16:
                 QtWidgets.QMessageBox.warning(self, "Input Error", "AES key must be exactly 16 characters (128 bits)")
@@ -346,9 +360,14 @@ class CipherApp(QtWidgets.QWidget):
             if encrypt_text:
                 result_enc = aes_encrypt(encrypt_text, prv_key)
                 self.decryptInput.setPlainText(result_enc)
-            if decrypt_text:
-                result_dec = aes_decrypt(decrypt_text, prv_key)
-                self.encryptInput.setPlainText(result_dec)
+            try:    
+                if decrypt_text:
+                    result_dec = aes_decrypt(decrypt_text, prv_key)
+                    self.encryptInput.setPlainText(result_dec)
+            except ValueError as e:
+                QtWidgets.QMessageBox.warning(self, "Decryption Error", f"Invalid AES decryption input: {str(e)}")
+                return
+                
         elif cipher == "One-Time Pad":
             if len(prv_key) != len(encrypt_text) and len(prv_key) != len(decrypt_text):
                 QtWidgets.QMessageBox.warning(self, "Input Error", "One-Time Pad key must be the same length as the text")
@@ -373,7 +392,7 @@ class CipherApp(QtWidgets.QWidget):
                     QtWidgets.QMessageBox.warning(self, "Input Error", "RSA key format: p,q + e or p,q,d + e (comma-separated integers). Note: e is optional, default is 65537")
                     return
             except ValueError:
-                QtWidgets.QMessageBox.warning(self, "Input Error", "RSA keys must be integers separated by commas")
+                QtWidgets.QMessageBox.warning(self, "Input Error", "RSA keys must be integers separated by commas (p,q or p,q,d)")
                 return
             
             # Validate and set keys
@@ -481,7 +500,6 @@ class CipherApp(QtWidgets.QWidget):
             except ValueError as e:
                 QtWidgets.QMessageBox.warning(self, "Input Error", f"Invalid ElGamal parameters: {str(e)}")
                 return
-            
             # Encrypt/Decrypt
             try:
                 if encrypt_text:
@@ -504,6 +522,8 @@ class CipherApp(QtWidgets.QWidget):
             except Exception as e:
                 QtWidgets.QMessageBox.warning(self, "Encryption/Decryption Error", str(e))
                 return
+        elif cipher == "MD5" or cipher == "SHA-256":
+            needs_C_call = True
 
         # Start processing based on input
         if needs_C_call == True:
