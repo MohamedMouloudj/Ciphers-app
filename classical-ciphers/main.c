@@ -154,26 +154,46 @@ EXPORT const char* handle_cipher_file(const char* filename) {
     }
 
     if (strcmp(cipher, "hill") == 0) {
-        int keyMatrix[2][2];
-        if (sscanf(prv_key, "%d,%d,%d,%d", &keyMatrix[0][0], &keyMatrix[0][1], &keyMatrix[1][0], &keyMatrix[1][1]) != 4) {
-            snprintf(result_buffer, sizeof(result_buffer), "Error: Hill key should be in format 'a,b,c,d'");
+        int key[2][2];
+        char result[1000] = {0};
+
+        // Parse the key from prv_key string (format: "a,b,c,d")
+        int values[4];
+        int scanned = sscanf(prv_key, "%d,%d,%d,%d", 
+                           &values[0], &values[1], 
+                           &values[2], &values[3]);
+
+        if (scanned != 4) {
+            snprintf(result_buffer, sizeof(result_buffer), 
+                    "Error: Hill key should be in format 'a,b,c,d' for 2x2 matrix");
             return result_buffer;
         }
-        
-        // Validate the key matrix
-        if (!isValidKey(keyMatrix)) {
-            snprintf(result_buffer, sizeof(result_buffer), "Error: Invalid Hill cipher key matrix. Determinant must have an inverse modulo 26.");
+
+        // Fill the matrix
+        key[0][0] = values[0]; key[0][1] = values[1];
+        key[1][0] = values[2]; key[1][1] = values[3];
+
+        // Validate the key
+        if (!hill_validate_key(key)) {
+            snprintf(result_buffer, sizeof(result_buffer), 
+                    "Error: Invalid Hill cipher key (determinant must be coprime with 26)");
             return result_buffer;
         }
-        
-        char processed[MAX_TEXT_LENGTH] = {0};
-        prepareTextHill(plain_text, processed);
-        
+
+        // Perform encryption or decryption
         if (strcmp(mode, "encrypt") == 0) {
-            encrypt(processed, keyMatrix, result_buffer);
+            if (hill_encrypt(plain_text, key, result) != 0) {
+                snprintf(result_buffer, sizeof(result_buffer), "Error during Hill encryption");
+                return result_buffer;
+            }
         } else {
-            decrypt(processed, keyMatrix, result_buffer);
+            if (hill_decrypt(plain_text, key, result) != 0) {
+                snprintf(result_buffer, sizeof(result_buffer), "Error during Hill decryption");
+                return result_buffer;
+            }
         }
+
+        snprintf(result_buffer, sizeof(result_buffer), "%s", result);
         return result_buffer;
     }
     

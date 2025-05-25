@@ -1,6 +1,3 @@
-# Cleaned and corrected One-Time Pad (OTP) implementation
-# Only two functions are exported: otp_encrypt and otp_decrypt
-
 def otp_encrypt(plaintext: str, key: str) -> str:
     """
     Encrypts the plaintext using the One-Time Pad method.
